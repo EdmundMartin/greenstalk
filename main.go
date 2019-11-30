@@ -81,6 +81,7 @@ type Job struct {
 	Body string
 }
 
+
 func handlePut(cmd string, cc *ClientConn) error {
 	var pri, delay, ttr, tBytes int
 	_, err := fmt.Sscanf(cmd,"put %d %d %d %d\r\n", &pri, &delay, &ttr, &tBytes)
@@ -103,6 +104,7 @@ func handlePut(cmd string, cc *ClientConn) error {
 	return nil
 }
 
+
 func (cc *ClientConn) handleConnection() {
 	for {
 		res, _, _ := cc.reader.ReadLine()
@@ -111,7 +113,6 @@ func (cc *ClientConn) handleConnection() {
 		}
 	}
 }
-
 
 func main() {
 	l, err := net.Listen("tcp4", ":11300")
