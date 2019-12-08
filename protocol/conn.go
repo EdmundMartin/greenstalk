@@ -2,28 +2,28 @@ package protocol
 
 import (
 	"bufio"
-	"io"
 	"net"
-	"time"
 )
 
-const minBuffer  = 1500
+const minBuffer = 1500
 
 type ClientConn struct {
 	conn     net.Conn
 	reader   *bufio.Reader
 	writer   *bufio.Writer
+	scanner  *bufio.Scanner
 	Using    string
 	Watching []string
-	Db 		 Storage
+	Db       Storage
 }
 
 func NewClientConn(c net.Conn) *ClientConn {
 	return &ClientConn{
-		conn: c,
-		reader: bufio.NewReader(c),
-		writer: bufio.NewWriter(c),
-		Using: "default",
+		conn:     c,
+		reader:   bufio.NewReader(c),
+		writer:   bufio.NewWriter(c),
+		scanner:  bufio.NewScanner(c),
+		Using:    "default",
 		Watching: []string{"default"},
 	}
 }
@@ -79,16 +79,9 @@ func (c *ClientConn) SendAll(msg []byte) (int, error) {
 	return written, nil
 }
 
-
 func (c *ClientConn) HandleConnection() {
-	for {
-		res, _, err := c.reader.ReadLine()
-		if err != nil && err != io.EOF {
-			return
-		}
-		if len(res) > 0 {
-				handlePut(string(res), c)
-		}
-		<-time.After(100 * time.Millisecond)
-		}
+	for c.scanner.Scan() {
+		text := c.scanner.Text()
+		handleCmd(text, c)
 	}
+}

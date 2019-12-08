@@ -13,6 +13,9 @@ func main() {
 		return
 	}
 	defer l.Close()
+	dbConn := protocol.NewPGConn(`localhost`, `postgres`, `edmund`, `beanstalk`, 5432)
+	protocol.CreateTable(dbConn)
+	fmt.Println("Serving on port 11300")
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -20,6 +23,7 @@ func main() {
 			return
 		}
 		conn := protocol.NewClientConn(c)
+		conn.Db = dbConn
 		//go conn.handleConnection()
 		go conn.HandleConnection()
 	}
