@@ -7,5 +7,5 @@ type Job struct {
 	TimeToRun  int
 	TotalBytes int
 	Body       string
-	Tube 	   string
+	Tube       string
 }

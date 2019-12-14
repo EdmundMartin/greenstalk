@@ -8,20 +8,56 @@ import (
 func handleCmd(cmd string, c *ClientConn) {
 	verb := strings.Split(cmd, " ")[0]
 	switch  verb {
+	case "watch":
+		handleWatch(cmd, c)
+	case "ignore":
+		handleIgnore(cmd, c)
 	case "put":
 		handlePut(cmd, c)
 	case "reserve":
 		handleReserve(cmd, c)
+	case "delete":
+		handleDelete(cmd, c)
+	default:
+		fmt.Println("unsupported command")
 	}
+}
+
+func removeIdx(watching []string, index int) []string {
+	return append(watching[:index], watching[index+1:]...)
+}
+
+func handleIgnore(cmd string, c *ClientConn) {
+	fmt.Println(cmd)
+	var toIgnore string
+	fmt.Sscanf(cmd, "watch %s\r\n", &toIgnore)
+	if len(c.Watching) == 1 {
+		c.SendAll([]byte("NOT_IGNORED\r\n"))
+		return
+	}
+	for idx, tube := range c.Watching {
+		if tube == toIgnore {
+			c.Watching = removeIdx(c.Watching, idx)
+			c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
+			return
+		}
+	}
+	c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
+}
+
+func handleWatch(cmd string, c *ClientConn) {
+	fmt.Println(cmd)
+	var toWatch string
+	fmt.Sscanf(cmd, "watch %s\r\n", &toWatch)
+	c.Watching = append(c.Watching, toWatch)
+	c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
 }
 
 func handleReserve(cmd string, c *ClientConn) {
 	fmt.Println(cmd)
 	j, err := c.Db.Reserve(c.Watching)
-	fmt.Println(j)
 	if err != nil {
-		fmt.Println(err)
-		c.writer.Write([]byte("TIMED_OUT\r\n"))
+		c.SendAll([]byte("TIMED_OUT\r\n"))
 	}
 	c.SendAll([]byte(fmt.Sprintf("RESERVED %d %d\r\n", j.ID, j.TotalBytes)))
 	c.SendAll([]byte(fmt.Sprintf("%s\r\n", j.Body)))
@@ -47,4 +83,19 @@ func handlePut(cmd string, c *ClientConn) {
 		}
 		return
 	}
+}
+
+func handleDelete(cmd string, c *ClientConn) {
+	fmt.Println(cmd)
+	var jobID int
+	_, err := fmt.Sscanf(cmd, "delete %d\r\n", &jobID)
+	if err != nil {
+		return
+	}
+	found := c.Db.Delete(&Job{ID: jobID})
+	if found {
+		c.SendAll([]byte("DELETED\r\n"))
+		return
+	}
+	c.SendAll([]byte("NOT_FOUND\r\n"))
 }

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 )
 
@@ -84,4 +85,5 @@ func (c *ClientConn) HandleConnection() {
 		text := c.scanner.Text()
 		handleCmd(text, c)
 	}
+	fmt.Println("Exiting connection")
 }

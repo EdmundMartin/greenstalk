@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/EdmundMartin/greenstalk/protocol"
+	"github.com/EdmundMartin/greenstalk/protocol/postgres"
 	"net"
 )
 
@@ -13,8 +14,8 @@ func main() {
 		return
 	}
 	defer l.Close()
-	dbConn := protocol.NewPGConn(`localhost`, `postgres`, `edmund`, `beanstalk`, 5432)
-	protocol.CreateTable(dbConn)
+	dbConn := postgres.NewPGConn(`localhost`, `postgres`, `edmund`, `beanstalk`, 5432)
+	postgres.CreateTable(dbConn)
 	fmt.Println("Serving on port 11300")
 	for {
 		c, err := l.Accept()
