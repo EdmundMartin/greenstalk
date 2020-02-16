@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/EdmundMartin/greenstalk/protocol"
+	"github.com/EdmundMartin/greenstalk/stateManager"
 	"github.com/lib/pq"
 	"log"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 type PGConn struct {
 	Db *sql.DB
+	Updates chan <- *stateManager.HeapValue
 }
 
 func CreateTable(conn *PGConn) {
@@ -56,13 +58,15 @@ func (db *PGConn) Reserve(tubes []string) (*protocol.Job, error) {
 	// TODO - IMPLEMENT TTR STATUS RESET
 	stmt := `UPDATE jobs SET state = 'RESERVED', until = NOW() + ttr * interval '1 sec' WHERE
             id = (SELECT id FROM jobs WHERE state = 'READY' AND tube = ANY($1) ORDER BY priority ASC LIMIT 1)
-			RETURNING id, total_bytes, body;`
+			RETURNING id, total_bytes, body, until;`
 	for {
 		var id, totalBytes int
 		var body string
-		err := db.Db.QueryRow(stmt, pq.Array(tubes)).Scan(&id, &totalBytes, &body)
+		var until time.Time
+		err := db.Db.QueryRow(stmt, pq.Array(tubes)).Scan(&id, &totalBytes, &body, &until)
 		if err == nil {
 			j := &protocol.Job{ID: id, TotalBytes: totalBytes, Body: body}
+			db.Updates <- &stateManager.HeapValue{JobID: id, UnixStamp: until.Unix(), Status: "RESERVED"}
 			return j, nil
 		} else {
 			// TODO break on critical errors
@@ -79,6 +83,7 @@ func (db *PGConn) Delete(j *protocol.Job) bool {
 	if err != nil {
 		fmt.Println(err)
 	}
+	db.Updates <- &stateManager.HeapValue{j.ID, time.Now().Unix(), "DELETED"}
 	return foundID == j.ID
 }
 

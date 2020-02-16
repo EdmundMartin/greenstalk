@@ -2,17 +2,21 @@ package stateManager
 
 
 type HeapValue struct {
-	jobID int
-	unixStamp int
-	status string
+	JobID int
+	UnixStamp int64
+	Status string
 }
 
 type JobHeap struct {
 	heap []*HeapValue
+	heapMap map[int]*HeapValue
 }
 
 func NewJobHeap() *JobHeap {
-	return &JobHeap{}
+	return &JobHeap{
+		heap: []*HeapValue{},
+		heapMap: map[int]*HeapValue{},
+	}
 }
 
 func (jh *JobHeap) isLeaf(idx int) bool {
@@ -46,7 +50,7 @@ func (jh *JobHeap) swap(first, second int) {
 }
 
 func (jh *JobHeap) upHeapify(idx int) {
-	for jh.heap[idx].unixStamp < jh.heap[jh.parent(idx)].unixStamp {
+	for jh.heap[idx].UnixStamp < jh.heap[jh.parent(idx)].UnixStamp {
 		jh.swap(idx, jh.parent(idx))
 	}
 }
@@ -59,10 +63,10 @@ func (jh *JobHeap) downHeapify(current int) {
 	leftChild := jh.leftChild(current)
 	rightChild := jh.rightChild(current)
 	currentSize := len(jh.heap)
-	if leftChild < currentSize && jh.heap[leftChild].unixStamp < jh.heap[smallest].unixStamp {
+	if leftChild < currentSize && jh.heap[leftChild].UnixStamp < jh.heap[smallest].UnixStamp {
 		smallest = leftChild
 	}
-	if rightChild < currentSize && jh.heap[rightChild].unixStamp < jh.heap[smallest].unixStamp {
+	if rightChild < currentSize && jh.heap[rightChild].UnixStamp < jh.heap[smallest].UnixStamp {
 		smallest = rightChild
 	}
 	if smallest != current {

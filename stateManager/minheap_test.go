@@ -5,19 +5,19 @@ import "testing"
 func TestJobHeap_Insert(t *testing.T) {
 	h := NewJobHeap()
 	hv := &HeapValue{
-		jobID:     1,
-		unixStamp: 100,
-		status:    "",
+		JobID:     1,
+		UnixStamp: 100,
+		Status:    "",
 	}
 	hv2 := &HeapValue{
-		jobID:     0,
-		unixStamp: 75,
-		status:    "",
+		JobID:     0,
+		UnixStamp: 75,
+		Status:    "",
 	}
 	h.Insert(hv)
 	h.Insert(hv2)
 	result := h.Peek()
-	if result.unixStamp != 75 {
+	if result.UnixStamp != 75 {
 		t.Errorf("incorrect heapValue returned")
 	}
 }
@@ -25,19 +25,19 @@ func TestJobHeap_Insert(t *testing.T) {
 func TestJobHeap_Remove(t *testing.T) {
 	h := NewJobHeap()
 	hv := &HeapValue{
-		jobID:     0,
-		unixStamp: 75,
-		status:    "",
+		JobID:     0,
+		UnixStamp: 75,
+		Status:    "",
 	}
 	hv2 := &HeapValue{
-		jobID:     0,
-		unixStamp: 100,
-		status:    "",
+		JobID:     0,
+		UnixStamp: 100,
+		Status:    "",
 	}
 	hv3 := &HeapValue{
-		jobID:     0,
-		unixStamp: 125,
-		status:    "",
+		JobID:     0,
+		UnixStamp: 125,
+		Status:    "",
 	}
 	h.Insert(hv)
 	h.Insert(hv2)
@@ -47,7 +47,7 @@ func TestJobHeap_Remove(t *testing.T) {
 		t.Errorf("incorrect value removed from heap")
 	}
 	peeked := h.Peek()
-	if peeked.unixStamp != 100 {
+	if peeked.UnixStamp != 100 {
 		t.Errorf("heap peeked value incorrect")
 	}
 }
