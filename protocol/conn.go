@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"sort"
 )
 
 const minBuffer = 1500
@@ -16,6 +17,32 @@ type ClientConn struct {
 	Using    string
 	Watching []string
 	Db       Storage
+}
+
+func (c *ClientConn) insertWatching(toWatch string) {
+	if c.findTube(toWatch) == -1 {
+		c.Watching = append(c.Watching, toWatch)
+		sort.Strings(c.Watching)
+	}
+}
+
+func tubeBinary(target string, tubes []string, start int, end int) int {
+	if start > end {
+		return -1
+	}
+	middle := (start + end) / 2
+	if tubes[middle] == target {
+		return middle
+	}
+	if tubes[middle] > target {
+		return tubeBinary(target, tubes, start, middle-1)
+	} else {
+		return tubeBinary(target, tubes, middle+1, end)
+	}
+}
+
+func (c *ClientConn) findTube(tube string) int {
+	return tubeBinary(tube, c.Watching, 0, len(c.Watching)-1)
 }
 
 func NewClientConn(c net.Conn) *ClientConn {

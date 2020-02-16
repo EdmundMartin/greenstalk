@@ -35,12 +35,11 @@ func handleIgnore(cmd string, c *ClientConn) {
 		c.SendAll([]byte("NOT_IGNORED\r\n"))
 		return
 	}
-	for idx, tube := range c.Watching {
-		if tube == toIgnore {
-			c.Watching = removeIdx(c.Watching, idx)
-			c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
-			return
-		}
+	foundTube := c.findTube(toIgnore)
+	if foundTube != -1 {
+		c.Watching = removeIdx(c.Watching, foundTube)
+		c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
+		return
 	}
 	c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
 }
@@ -49,7 +48,7 @@ func handleWatch(cmd string, c *ClientConn) {
 	fmt.Println(cmd)
 	var toWatch string
 	fmt.Sscanf(cmd, "watch %s\r\n", &toWatch)
-	c.Watching = append(c.Watching, toWatch)
+	c.insertWatching(toWatch)
 	c.SendAll([]byte(fmt.Sprintf("WATCHING %d\r\n", len(c.Watching))))
 }
 
