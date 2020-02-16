@@ -19,7 +19,7 @@ func main() {
 	dbConn := postgres.NewPGConn(`localhost`, `postgres`, `edmund`, `beanstalk`, 5432)
 	postgres.CreateTable(dbConn)
 	dbConn.Updates = statusChanges
-	go stateManager.ManageState(statusChanges)
+	go stateManager.ManageState(statusChanges, dbConn)
 	fmt.Println("Serving on port 11300")
 	for {
 		c, err := l.Accept()

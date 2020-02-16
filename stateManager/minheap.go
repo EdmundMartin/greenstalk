@@ -9,13 +9,15 @@ type HeapValue struct {
 
 type JobHeap struct {
 	heap []*HeapValue
-	heapMap map[int]*HeapValue
+	inHeap map[int]bool
+	deletedJobs map[int]bool
 }
 
 func NewJobHeap() *JobHeap {
 	return &JobHeap{
 		heap: []*HeapValue{},
-		heapMap: map[int]*HeapValue{},
+		inHeap: make(map[int]bool),
+		deletedJobs: make(map[int]bool),
 	}
 }
 
@@ -81,9 +83,14 @@ func (jh *JobHeap) Remove() *HeapValue {
 	jh.heap[0] = jh.heap[len(jh.heap)-1]
 	jh.heap = jh.heap[:len(jh.heap)-1]
 	jh.downHeapify(0)
+	delete(jh.inHeap, top.JobID)
+	delete(jh.deletedJobs, top.JobID)
 	return top
 }
 
 func (jh *JobHeap) Peek() *HeapValue {
+	if len(jh.heap) == 0 {
+		return nil
+	}
 	return jh.heap[0]
 }

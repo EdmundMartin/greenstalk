@@ -5,5 +5,6 @@ type Storage interface {
 	Delete(job *Job) bool
 	Bury(job *Job) bool
 	Reserve(tubes []string) (*Job, error)
-	UpdateJobs()
+	UpdateJob(jID int, status string)
+	Reset()
 }

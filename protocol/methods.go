@@ -18,6 +18,8 @@ func handleCmd(cmd string, c *ClientConn) {
 		handleReserve(cmd, c)
 	case "delete":
 		handleDelete(cmd, c)
+	case "use":
+		handleUse(cmd, c)
 	default:
 		fmt.Println("unsupported command")
 	}
@@ -97,4 +99,16 @@ func handleDelete(cmd string, c *ClientConn) {
 		return
 	}
 	c.SendAll([]byte("NOT_FOUND\r\n"))
+}
+
+func handleUse(cmd string, c *ClientConn) {
+	fmt.Println(cmd)
+	var toUse string
+	_, err := fmt.Sscanf(cmd, "use %s\r\n", &toUse)
+	if err != nil {
+		return
+	}
+	c.Using = toUse
+	msg := fmt.Sprintf("USING %s\r\n", toUse)
+	c.SendAll([]byte(msg))
 }

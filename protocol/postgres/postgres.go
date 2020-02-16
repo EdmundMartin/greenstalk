@@ -26,6 +26,9 @@ func CreateTable(conn *PGConn) {
                total_bytes INTEGER,
                until TIMESTAMP
 	);
+	
+	CREATE INDEX IF NOT EXISTS tube_state
+	ON jobs (tube, state);
 	`
 	_, err := conn.Db.Exec(schema)
 	if err != nil {
@@ -91,6 +94,24 @@ func (db *PGConn) Bury(j *protocol.Job) bool {
 	return false
 }
 
-func (db *PGConn) UpdateJobs() {
+func (db *PGConn) UpdateJob(jID int, status string) {
+	switch status {
+	case "RESERVED":
+		db.resetReserved(jID)
+	}
+}
 
+func (db *PGConn) resetReserved(jID int) {
+	stmt := `UPDATE jobs SET state = 'READY' WHERE id = $1 and state = 'RESERVED';`
+	db.Db.Exec(stmt)
+}
+
+func (db *PGConn) Reset() {
+	stmts := []string{
+		`UPDATE jobs SET state = 'READY' WHERE until < NOW() - interval '60 sec' AND state = 'RESERVED';`,
+		`UPDATE jobs SET state = 'READY' WHERE until < NOW() - interval '60 sec' AND state = 'DELAYED';`,
+	}
+	for _, stmt := range stmts {
+		db.Db.Exec(stmt)
+	}
 }
